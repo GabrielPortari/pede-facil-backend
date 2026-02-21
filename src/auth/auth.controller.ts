@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { LoginDto } from './dto/login.dto';
+import { SignupDto } from './dto/signup.dto';
 import { IdToken } from './dto/id-token.decorator';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import {
@@ -33,6 +34,18 @@ export class AuthController {
   @HttpCode(200)
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('signup')
+  @ApiOperation({ summary: 'Registra um novo usuário' })
+  @ApiBody({ type: SignupDto })
+  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
+  @HttpCode(201)
+  async signup(@Body() signupDto: SignupDto) {
+    const { user, accessToken, refreshToken } = await this.authService.signup(
+      signupDto as any,
+    );
+    return { user, accessToken, refreshToken };
   }
 
   @Post('refresh-auth')
