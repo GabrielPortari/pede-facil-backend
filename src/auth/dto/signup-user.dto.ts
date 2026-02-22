@@ -7,6 +7,7 @@ import {
   IsNotEmpty,
   IsPhoneNumber,
   Matches,
+  MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -48,7 +49,7 @@ class AddressDto {
   zipcode?: string;
 }
 
-export class CreateUserDto {
+export class SignupUserDto {
   @ApiProperty({ example: 'João Silva' })
   @IsString()
   @IsNotEmpty()
@@ -74,4 +75,9 @@ export class CreateUserDto {
   @ApiProperty({ example: 'joao.silva@example.com' })
   @IsEmail()
   email: string;
+
+  @ApiProperty({ example: 'securePassword123' })
+  @IsString()
+  @MinLength(6)
+  password: string;
 }

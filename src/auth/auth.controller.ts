@@ -9,7 +9,6 @@ import {
 import { AuthService } from './auth.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { LoginDto } from './dto/login.dto';
-import { SignupDto } from './dto/signup.dto';
 import { IdToken } from './dto/id-token.decorator';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import {
@@ -19,6 +18,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AuthGuard } from './auth.guard';
+import { SignupUserDto } from './dto/signup-user.dto';
+import { SignupBusinessDto } from './dto/signup-business.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -36,16 +37,22 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @Post('signup')
+  @Post('signup/user')
   @ApiOperation({ summary: 'Registra um novo usuário' })
-  @ApiBody({ type: SignupDto })
+  @ApiBody({ type: SignupUserDto })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
   @HttpCode(201)
-  async signup(@Body() signupDto: SignupDto) {
-    const { user, accessToken, refreshToken } = await this.authService.signup(
-      signupDto as any,
-    );
-    return { user, accessToken, refreshToken };
+  async signupUser(@Body() signupDto: SignupUserDto) {
+    return this.authService.signupUser(signupDto as any);
+  }
+
+  @Post('signup/business')
+  @ApiOperation({ summary: 'Registra um novo negócio' })
+  @ApiBody({ type: SignupBusinessDto })
+  @ApiResponse({ status: 201, description: 'Negócio criado com sucesso.' })
+  @HttpCode(201)
+  async signupBusiness(@Body() signupDto: SignupBusinessDto) {
+    return this.authService.signupBusiness(signupDto as any);
   }
 
   @Post('refresh-auth')

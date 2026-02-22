@@ -7,6 +7,7 @@ import {
   IsNotEmpty,
   IsPhoneNumber,
   Matches,
+  MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -48,16 +49,16 @@ class AddressDto {
   zipcode?: string;
 }
 
-export class CreateUserDto {
-  @ApiProperty({ example: 'João Silva' })
+export class SignupBusinessDto {
+  @ApiProperty({ example: 'Cafeteria do Bairro' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: '123.456.789-09' })
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/logo.png' })
   @IsOptional()
   @IsString()
-  document?: string;
+  logoUrl?: string;
 
   @ApiPropertyOptional({ type: AddressDto })
   @IsOptional()
@@ -65,13 +66,17 @@ export class CreateUserDto {
   @Type(() => AddressDto)
   address?: AddressDto;
 
-  @ApiPropertyOptional({ example: '+5511999999999' })
-  @IsOptional()
+  @ApiProperty({ example: '+5511999999999' })
   @IsString()
   @IsPhoneNumber('BR')
-  contact?: string;
+  contact: string;
 
-  @ApiProperty({ example: 'joao.silva@example.com' })
+  @ApiProperty({ example: 'contato@cafebairro.com' })
   @IsEmail()
   email: string;
+
+  @ApiProperty({ example: 'securePassword123' })
+  @IsString()
+  @MinLength(6)
+  password: string;
 }

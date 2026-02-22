@@ -1,14 +1,17 @@
 import { BaseModel } from './base.model';
+import { Money } from './money.model';
+import { Promotion } from './promotion.model';
 
 export class Product extends BaseModel {
   businessId: string;
   name: string;
   description?: string;
-  price: number;
-  discountPrice?: number;
+  price: Money;
+  discountPrice?: Money;
   imageUrl?: string;
-  promotion: boolean;
-  promotionPercentage?: number;
+  available?: boolean;
+  stock?: number;
+  promotion?: Promotion;
 
   constructor(init?: Partial<Product>) {
     super(init);

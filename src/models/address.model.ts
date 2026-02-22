@@ -1,9 +1,9 @@
-export class Address {
-  address?: string;
-  addressNumber?: string;
-  addressComplement?: string;
+export interface Address {
+  address: string;
+  number: string;
+  complement?: string;
   neighborhood?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
+  city: string;
+  state: string;
+  zipcode?: string;
 }

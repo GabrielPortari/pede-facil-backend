@@ -5,7 +5,7 @@ export class User extends BaseModel {
   name: string;
   document?: string;
   address?: Address;
-  email?: string;
+  email: string;
   contact?: string;
 
   constructor(init?: Partial<User>) {
