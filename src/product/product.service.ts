@@ -118,6 +118,14 @@ export class ProductService {
     return snapshot.docs.map((d) => ProductEntity.fromFirestore(d));
   }
 
+  async findAvailableByBusiness(businessId: string) {
+    const snapshot = await ProductEntity.collectionRef(businessId)
+      .where('available', '==', true)
+      .orderBy('createdAt', 'desc')
+      .get();
+    return snapshot.docs.map((d) => ProductEntity.fromFirestore(d));
+  }
+
   async update(
     businessId: string,
     productId: string,
@@ -157,6 +165,24 @@ export class ProductService {
     );
 
     this.applyDiscountFromPromotion(merged);
+
+    const data = ProductEntity.toFirestore(merged);
+    await docRef.update(data);
+    const updated = await docRef.get();
+    return ProductEntity.fromFirestore(updated);
+  }
+
+  async updateAvailability(
+    businessId: string,
+    productId: string,
+    available: boolean,
+  ) {
+    const docRef = ProductEntity.docRef(businessId, productId);
+    const doc = await docRef.get();
+    if (!doc.exists) throw new NotFoundException('Product not found');
+
+    const existing = ProductEntity.fromFirestore(doc);
+    const merged = Object.assign(new Product(existing), { available });
 
     const data = ProductEntity.toFirestore(merged);
     await docRef.update(data);

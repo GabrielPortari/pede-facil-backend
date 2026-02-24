@@ -6,8 +6,8 @@ import { Role } from 'src/constants/roles';
 @Controller('roles')
 export class RolesController {
   @Get('user')
-  @ApiOperation({ summary: 'Endpoint para colaboradores' })
-  @ApiResponse({ status: 200, description: 'Acesso de colaborador' })
+  @ApiOperation({ summary: 'Endpoint para usuários' })
+  @ApiResponse({ status: 200, description: 'Acesso de usuário' })
   @UseGuards(RolesGuard(Role.USER))
   @ApiBearerAuth()
   user() {

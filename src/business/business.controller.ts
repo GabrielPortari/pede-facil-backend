@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
@@ -9,14 +8,35 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
-import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { Role } from 'src/constants/roles';
 import { RolesGuard } from 'src/roles/roles.guard';
+import { IdToken } from 'src/auth/dto/id-token.decorator';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(
+    private readonly businessService: BusinessService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
+
+  @Get('me')
+  @UseGuards(RolesGuard(Role.BUSINESS))
+  async findMe(@IdToken() token: string) {
+    const { uid } = await this.firebaseService.verifyIdToken(token, true);
+    return this.businessService.findOne(uid);
+  }
+
+  @Patch('me')
+  @UseGuards(RolesGuard(Role.BUSINESS))
+  async updateMe(
+    @IdToken() token: string,
+    @Body() updateBusinessDto: UpdateBusinessDto,
+  ) {
+    const { uid } = await this.firebaseService.verifyIdToken(token, true);
+    return this.businessService.update(uid, updateBusinessDto);
+  }
 
   @Get()
   findAll() {
