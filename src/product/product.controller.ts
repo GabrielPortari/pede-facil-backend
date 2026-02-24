@@ -48,6 +48,23 @@ export class ProductController {
     return this.productService.findAvailableByBusiness(businessId);
   }
 
+  @Get('promotions')
+  @ApiOperation({ summary: 'Lista produtos com promoção ativa do business' })
+  @ApiResponse({ status: 200, description: 'Lista de produtos em promoção.' })
+  findProductsInPromotion(@Param('businessId') businessId: string) {
+    return this.productService.findProductsInPromotion(businessId);
+  }
+
+  @Get('without-promotions')
+  @ApiOperation({ summary: 'Lista produtos sem promoção ativa do business' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de produtos sem promoção ativa.',
+  })
+  findProductsWithoutPromotion(@Param('businessId') businessId: string) {
+    return this.productService.findProductsWithoutPromotion(businessId);
+  }
+
   @Get(':productId')
   @ApiOperation({ summary: 'Obtém um produto do business' })
   @ApiResponse({ status: 200, description: 'Produto retornado com sucesso.' })

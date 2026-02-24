@@ -126,6 +126,24 @@ export class ProductService {
     return snapshot.docs.map((d) => ProductEntity.fromFirestore(d));
   }
 
+  async findProductsInPromotion(businessId: string) {
+    const snapshot = await ProductEntity.collectionRef(businessId)
+      .where('promotion.active', '==', true)
+      .orderBy('createdAt', 'desc')
+      .get();
+    return snapshot.docs.map((d) => ProductEntity.fromFirestore(d));
+  }
+
+  async findProductsWithoutPromotion(businessId: string) {
+    const snapshot = await ProductEntity.collectionRef(businessId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snapshot.docs
+      .map((d) => ProductEntity.fromFirestore(d))
+      .filter((product) => !product.promotion?.active);
+  }
+
   async update(
     businessId: string,
     productId: string,
