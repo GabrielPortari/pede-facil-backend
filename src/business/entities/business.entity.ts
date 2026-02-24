@@ -1,9 +1,10 @@
 import * as admin from 'firebase-admin';
 import { Business } from '../../models/business.model';
 import { BaseModel } from '../../models/base.model';
+import { Collections } from 'src/constants/collections';
 
 export class BusinessEntity {
-  static collection = 'businesses';
+  static collection = Collections.BUSINESSES;
 
   static collectionRef() {
     return admin.firestore().collection(BusinessEntity.collection);

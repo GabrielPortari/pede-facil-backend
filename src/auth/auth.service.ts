@@ -9,6 +9,7 @@ import { BusinessEntity } from 'src/business/entities/business.entity';
 import { Business } from 'src/models/business.model';
 import { User } from 'src/models/user.model';
 import { BaseModel } from 'src/models/base.model';
+import { Collections } from 'src/constants/collections';
 
 @Injectable()
 export class AuthService {
@@ -48,7 +49,7 @@ export class AuthService {
 
     try {
       await this.firebaseService.createDocument(
-        'users',
+        Collections.USERS,
         userRecord.uid,
         userData,
       );
@@ -69,7 +70,7 @@ export class AuthService {
       try {
         await admin
           .firestore()
-          .collection('users')
+          .collection(Collections.USERS)
           .doc(userRecord.uid)
           .delete();
       } catch (e) {
@@ -86,11 +87,10 @@ export class AuthService {
   }
 
   async signupBusiness(dto: SignupBusinessDto) {
-    const { email, password, name } = dto;
     const userRecord = await this.firebaseService.createUser({
-      email,
-      password,
-      displayName: name,
+      email: dto.email,
+      password: dto.password,
+      displayName: dto.name,
     });
     await this.firebaseService.setCustomUserClaims(userRecord.uid, {
       role: 'business',
@@ -98,18 +98,18 @@ export class AuthService {
 
     // persist business using BusinessEntity mapper (adds serverTimestamp via BaseModel)
     const businessModel = new Business({
-      name,
-      email,
+      name: dto.name,
+      email: dto.email,
       contact: dto.contact,
       address: dto.address,
-      // verified defaults to false in storage
+      verified: false,
     } as any);
 
     const businessData = BusinessEntity.toFirestore(businessModel as any);
 
     try {
       await this.firebaseService.createDocument(
-        'businesses',
+        Collections.BUSINESSES,
         userRecord.uid,
         businessData,
       );
@@ -122,14 +122,14 @@ export class AuthService {
     let tokens;
     try {
       tokens = await this.firebaseService.signInWithEmailAndPassword(
-        email,
-        password,
+        dto.email,
+        dto.password,
       );
     } catch (err) {
       try {
         await admin
           .firestore()
-          .collection('businesses')
+          .collection(Collections.BUSINESSES)
           .doc(userRecord.uid)
           .delete();
       } catch (e) {
@@ -142,8 +142,8 @@ export class AuthService {
     return {
       user: {
         uid: userRecord.uid,
-        email,
-        name,
+        email: dto.email,
+        name: dto.name,
         role: 'business',
       },
       ...tokens,
