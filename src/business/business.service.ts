@@ -1,19 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { BusinessEntity } from './entities/business.entity';
 import { Business } from '../models/business.model';
 
 @Injectable()
 export class BusinessService {
-  async create(createBusinessDto: CreateBusinessDto) {
-    const business = new Business(createBusinessDto as Partial<Business>);
-    const data = BusinessEntity.toFirestore(business);
-    const ref = await BusinessEntity.collectionRef().add(data);
-    const saved = await ref.get();
-    return BusinessEntity.fromFirestore(saved);
-  }
-
   async findAll() {
     const snapshot = await BusinessEntity.collectionRef()
       .orderBy('createdAt', 'desc')

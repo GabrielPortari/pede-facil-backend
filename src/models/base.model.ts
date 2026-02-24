@@ -9,8 +9,35 @@ export class BaseModel {
     Object.assign(this, init);
   }
 
+  private static toPlainObject(value: any): any {
+    if (value === null || value === undefined) return value;
+    if (value instanceof Date) return value;
+    if (Array.isArray(value))
+      return value.map((item) => BaseModel.toPlainObject(item));
+
+    if (typeof value !== 'object') return value;
+
+    // Keep known Firestore native/special objects untouched
+    const constructorName = value.constructor?.name;
+    if (
+      constructorName === 'Timestamp' ||
+      constructorName === 'GeoPoint' ||
+      constructorName === 'DocumentReference' ||
+      constructorName === 'FieldValue'
+    ) {
+      return value;
+    }
+
+    const result: Record<string, any> = {};
+    Object.keys(value).forEach((key) => {
+      const nested = BaseModel.toPlainObject(value[key]);
+      if (nested !== undefined) result[key] = nested;
+    });
+    return result;
+  }
+
   static toFirestore<T extends BaseModel>(model: T) {
-    const data: any = { ...model };
+    const data: any = BaseModel.toPlainObject(model);
     delete data.id;
     // remove undefined properties to avoid Firestore error
     Object.keys(data).forEach((k) => {

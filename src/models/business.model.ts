@@ -8,6 +8,7 @@ export class Business extends BaseModel {
   contact: string; //TODO: tipar com formato de telefone
   email: string; //TODO: tipar com formato de email
   verified: boolean;
+  active: boolean;
 
   constructor(init?: Partial<Business>) {
     super(init);

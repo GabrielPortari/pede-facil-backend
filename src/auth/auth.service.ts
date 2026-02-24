@@ -1,4 +1,3 @@
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 import { LoginDto } from './dto/login.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -9,7 +8,9 @@ import { BusinessEntity } from 'src/business/entities/business.entity';
 import { Business } from 'src/models/business.model';
 import { User } from 'src/models/user.model';
 import { BaseModel } from 'src/models/base.model';
+import { Address } from 'src/models/address.model';
 import { Collections } from 'src/constants/collections';
+import { Role } from 'src/constants/roles';
 
 @Injectable()
 export class AuthService {
@@ -33,18 +34,23 @@ export class AuthService {
   }
 
   async signupUser(dto: SignupUserDto) {
-    const { email, password, name } = dto;
     const userRecord = await this.firebaseService.createUser({
-      email,
-      password,
-      displayName: name,
+      email: dto.email,
+      password: dto.password,
+      displayName: dto.name,
     });
     await this.firebaseService.setCustomUserClaims(userRecord.uid, {
-      role: 'user',
+      role: Role.USER,
     });
 
     // persist user document using BaseModel mapper (adds serverTimestamp)
-    const userModel = new User({ name, email, contact: dto.contact } as any);
+    const userModel = new User({
+      name: dto.name,
+      email: dto.email,
+      document: dto.document,
+      contact: dto.contact,
+      address: dto.address as Address,
+    } as any);
     const userData = BaseModel.toFirestore(userModel);
 
     try {
@@ -62,8 +68,8 @@ export class AuthService {
     let tokens;
     try {
       tokens = await this.firebaseService.signInWithEmailAndPassword(
-        email,
-        password,
+        dto.email,
+        dto.password,
       );
     } catch (err) {
       // try to cleanup firestore and auth user
@@ -81,7 +87,12 @@ export class AuthService {
     }
 
     return {
-      user: { uid: userRecord.uid, email, name, role: 'user' },
+      user: {
+        uid: userRecord.uid,
+        email: dto.email,
+        name: dto.name,
+        role: Role.USER,
+      },
       ...tokens,
     };
   }
@@ -93,7 +104,7 @@ export class AuthService {
       displayName: dto.name,
     });
     await this.firebaseService.setCustomUserClaims(userRecord.uid, {
-      role: 'business',
+      role: Role.BUSINESS,
     });
 
     // persist business using BusinessEntity mapper (adds serverTimestamp via BaseModel)
@@ -101,11 +112,12 @@ export class AuthService {
       name: dto.name,
       email: dto.email,
       contact: dto.contact,
-      address: dto.address,
+      address: dto.address as Address,
       verified: false,
+      active: false,
     } as any);
 
-    const businessData = BusinessEntity.toFirestore(businessModel as any);
+    const businessData = BusinessEntity.toFirestore(businessModel as Business);
 
     try {
       await this.firebaseService.createDocument(
@@ -119,7 +131,7 @@ export class AuthService {
     }
 
     // sign in to return tokens; if signIn fails, rollback both firestore doc and auth user
-    let tokens;
+    let tokens: any;
     try {
       tokens = await this.firebaseService.signInWithEmailAndPassword(
         dto.email,
@@ -144,7 +156,7 @@ export class AuthService {
         uid: userRecord.uid,
         email: dto.email,
         name: dto.name,
-        role: 'business',
+        role: Role.BUSINESS,
       },
       ...tokens,
     };

@@ -7,6 +7,8 @@ import {
   IsNotEmpty,
   IsPhoneNumber,
   Matches,
+  isBoolean,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -73,4 +75,12 @@ export class CreateBusinessDto {
   @ApiProperty({ example: 'contato@cafebairro.com' })
   @IsEmail()
   email: string;
+
+  @ApiProperty({ example: false })
+  @IsBoolean()
+  active: boolean;
+
+  @ApiProperty({ example: false })
+  @IsBoolean()
+  verified: boolean;
 }

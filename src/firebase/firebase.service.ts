@@ -129,6 +129,13 @@ export class FirebaseService {
   }
 
   async createDocument(collection: string, id: string, data: any) {
+    if (data && typeof data === 'object') {
+      if (data.createdAt === undefined) {
+        data.createdAt = firebaseAdmin.firestore.FieldValue.serverTimestamp();
+      }
+      data.updatedAt = firebaseAdmin.firestore.FieldValue.serverTimestamp();
+    }
+
     return await firebaseAdmin
       .firestore()
       .collection(collection)
