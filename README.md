@@ -1,6 +1,6 @@
-# Balco Tech — Backend
+# Pede Fácil — Backend
 
-Backend em Node.js usando NestJS para o projeto Balco Tech.
+Backend em Node.js usando NestJS para o projeto Pede Fácil.
 
 ## Descrição
 

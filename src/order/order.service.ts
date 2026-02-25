@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import * as admin from 'firebase-admin';
 import { Collections } from 'src/constants/collections';
 import { ProductEntity } from 'src/product/entities/product.entity';

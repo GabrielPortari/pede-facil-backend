@@ -1,5 +1,5 @@
 ---
-name: balco-tech
+name: pede-facil
 description: Sempre que eu solicitar algum auxilio durante o desenvolvimento do meu aplicativo de pedidos para bares e cafeterias, utilize este prompt para me ajudar a resolver dúvidas técnicas, sugerir melhorias ou fornecer exemplos de código relacionados às tecnologias e funcionalidades descritas abaixo.
 ---
 

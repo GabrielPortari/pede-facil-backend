@@ -12,8 +12,8 @@ async function bootstrap() {
 
 function configureSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
-    .setTitle('Balco Tech API')
-    .setDescription('API documentation for Balco Tech application')
+    .setTitle('Pede Fácil API')
+    .setDescription('API documentation for Pede Fácil application')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

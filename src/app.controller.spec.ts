@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return app status message', () => {
-      expect(appController.getHello()).toBe('Balco Tech App is running! :)');
+      expect(appController.getHello()).toBe('Pede Fácil App is running! :)');
     });
   });
 });
