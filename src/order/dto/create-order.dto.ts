@@ -6,7 +6,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   ValidateNested,
   IsInt,
   Min,
@@ -25,11 +24,25 @@ class CreateOrderItemDto {
 
   @ApiPropertyOptional({
     description: 'Options or notes for the item',
-    example: 'Sem lactose',
+    type: Object,
+    example: { size: 'Grande', observations: 'sem gelo' },
   })
   @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateOrderItemOptionsDto)
+  options?: CreateOrderItemOptionsDto;
+}
+
+class CreateOrderItemOptionsDto {
+  @ApiPropertyOptional({ example: 'Grande' })
+  @IsOptional()
   @IsString()
-  options?: string;
+  size?: string;
+
+  @ApiPropertyOptional({ example: 'sem gelo' })
+  @IsOptional()
+  @IsString()
+  observations?: string;
 }
 
 export class CreateOrderDto {
