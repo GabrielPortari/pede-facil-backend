@@ -5,9 +5,7 @@ import { Product } from './product.model';
 
 type OrderStatus =
   | 'payment_pending'
-  | 'paid_awaiting_pickup'
   | 'paid_awaiting_delivery'
-  | 'picked_up'
   | 'delivered'
   | 'customer_confirmed'
   | 'customer_cancelled'

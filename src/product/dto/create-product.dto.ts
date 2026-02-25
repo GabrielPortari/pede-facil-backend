@@ -88,6 +88,22 @@ export class CreateProductDto {
   @Min(0)
   stock?: number;
 
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  useStock?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  usePromotionStock?: boolean;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  promotionStock?: number;
+
   @ApiPropertyOptional({ type: PromotionDto })
   @IsOptional()
   @ValidateNested()

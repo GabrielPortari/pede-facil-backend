@@ -11,7 +11,10 @@ export class Product extends BaseModel {
   imageUrl?: string;
   available?: boolean;
   stock?: number;
+  useStock?: boolean;
   promotion?: Promotion;
+  promotionStock?: number;
+  usePromotionStock?: boolean;
 
   constructor(init?: Partial<Product>) {
     super(init);

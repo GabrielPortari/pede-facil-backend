@@ -48,4 +48,15 @@ export class UpdateProductPromotionDto {
   @ValidateNested()
   @Type(() => MoneyDto)
   amount?: MoneyDto;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  usePromotionStock?: boolean;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  promotionStock?: number;
 }
