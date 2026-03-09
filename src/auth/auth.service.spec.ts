@@ -13,6 +13,7 @@ describe('AuthService - signupBusiness', () => {
     verifyIdToken: jest.fn(),
     revokeRefreshTokens: jest.fn(),
     refreshAuthToken: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
     createUser: jest.fn(),
     setCustomUserClaims: jest.fn(),
     createDocument: jest.fn(),
@@ -145,5 +146,18 @@ describe('AuthService - signupBusiness', () => {
         },
       } as any),
     ).rejects.toThrow(new ConflictException('Email já cadastrado'));
+  });
+
+  it('deve enviar email de recuperacao de senha', async () => {
+    firebaseMock.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+    const result = await service.recoverPassword(' USUARIO@EXEMPLO.COM ');
+
+    expect(firebaseMock.sendPasswordResetEmail).toHaveBeenCalledWith(
+      'usuario@exemplo.com',
+    );
+    expect(result).toEqual({
+      message: 'E-mail de recuperação enviado com sucesso.',
+    });
   });
 });

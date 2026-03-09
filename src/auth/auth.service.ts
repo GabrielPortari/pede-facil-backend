@@ -37,6 +37,13 @@ export class AuthService {
     return await this.firebaseService.refreshAuthToken(refreshToken);
   }
 
+  async recoverPassword(email: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+    await this.firebaseService.sendPasswordResetEmail(normalizedEmail);
+
+    return { message: 'E-mail de recuperação enviado com sucesso.' };
+  }
+
   async signupUser(dto: SignupUserDto) {
     const userRecord = await this.firebaseService.createUser({
       email: dto.email,

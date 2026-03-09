@@ -20,6 +20,7 @@ import {
 import { AuthGuard } from './auth.guard';
 import { SignupUserDto } from './dto/signup-user.dto';
 import { SignupBusinessDto } from './dto/signup-business.dto';
+import { RecoverPasswordDto } from './dto/recover-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -117,6 +118,18 @@ export class AuthController {
   @HttpCode(200)
   async refreshAuthToken(@Body() refreshToken: RefreshTokenDto) {
     return this.authService.refreshAuthToken(refreshToken.refreshToken);
+  }
+
+  @Post('recover-password')
+  @ApiOperation({ summary: 'Envia e-mail de recuperação de senha' })
+  @ApiBody({ type: RecoverPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'E-mail de recuperação enviado com sucesso.',
+  })
+  @HttpCode(200)
+  async recoverPassword(@Body() recoverPasswordDto: RecoverPasswordDto) {
+    return this.authService.recoverPassword(recoverPasswordDto.email);
   }
 
   @Post('logout')
