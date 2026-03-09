@@ -142,4 +142,19 @@ export class FirebaseService {
       .doc(id)
       .set(data);
   }
+
+  async existsByField(
+    collection: string,
+    field: string,
+    value: string,
+  ): Promise<boolean> {
+    const snapshot = await firebaseAdmin
+      .firestore()
+      .collection(collection)
+      .where(field, '==', value)
+      .limit(1)
+      .get();
+
+    return !snapshot.empty;
+  }
 }

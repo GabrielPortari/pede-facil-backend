@@ -1,6 +1,10 @@
 import { FirebaseService } from '../firebase/firebase.service';
 import { LoginDto } from './dto/login.dto';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { SignupBusinessDto } from './dto/signup-business.dto';
 import { SignupUserDto } from './dto/signup-user.dto';
 import * as admin from 'firebase-admin';
@@ -98,11 +102,25 @@ export class AuthService {
   }
 
   async signupBusiness(dto: SignupBusinessDto) {
-    const userRecord = await this.firebaseService.createUser({
-      email: dto.email,
-      password: dto.password,
-      displayName: dto.name,
-    });
+    const email = dto.email.trim().toLowerCase();
+    const cnpj = this.normalizeCnpj(dto.cnpj);
+
+    await this.ensureBusinessSignupUniqueness(email, cnpj);
+
+    let userRecord;
+    try {
+      userRecord = await this.firebaseService.createUser({
+        email,
+        password: dto.password,
+        displayName: dto.name,
+      });
+    } catch (err) {
+      if (this.isDuplicateEmailError(err)) {
+        throw new ConflictException('Email já cadastrado');
+      }
+      throw err;
+    }
+
     await this.firebaseService.setCustomUserClaims(userRecord.uid, {
       role: Role.BUSINESS,
     });
@@ -110,9 +128,21 @@ export class AuthService {
     // persist business using BusinessEntity mapper (adds serverTimestamp via BaseModel)
     const businessModel = new Business({
       name: dto.name,
-      email: dto.email,
+      legalName: dto.legalName,
+      cnpj,
+      website: dto.website,
+      logoUrl: dto.logoUrl,
+      email,
       contact: dto.contact,
-      address: dto.address as Address,
+      address: {
+        address: dto.address.address,
+        number: dto.address.number,
+        complement: dto.address.complement,
+        neighborhood: dto.address.neighborhood,
+        city: dto.address.city,
+        state: dto.address.state.toUpperCase(),
+        zipcode: dto.address.zipcode,
+      } as Address,
       verified: false,
       active: false,
     } as any);
@@ -134,7 +164,7 @@ export class AuthService {
     let tokens: any;
     try {
       tokens = await this.firebaseService.signInWithEmailAndPassword(
-        dto.email,
+        email,
         dto.password,
       );
     } catch (err) {
@@ -154,11 +184,54 @@ export class AuthService {
     return {
       user: {
         uid: userRecord.uid,
-        email: dto.email,
+        email,
         name: dto.name,
         role: Role.BUSINESS,
       },
       ...tokens,
     };
+  }
+
+  private normalizeCnpj(cnpj: string) {
+    return cnpj.replace(/\D/g, '');
+  }
+
+  private async ensureBusinessSignupUniqueness(email: string, cnpj: string) {
+    const [cnpjExists, businessEmailExists, userEmailExists] =
+      await Promise.all([
+        this.firebaseService.existsByField(
+          Collections.BUSINESSES,
+          'cnpj',
+          cnpj,
+        ),
+        this.firebaseService.existsByField(
+          Collections.BUSINESSES,
+          'email',
+          email,
+        ),
+        this.firebaseService.existsByField(Collections.USERS, 'email', email),
+      ]);
+
+    if (cnpjExists) {
+      throw new ConflictException('CNPJ já cadastrado');
+    }
+
+    if (businessEmailExists || userEmailExists) {
+      throw new ConflictException('Email já cadastrado');
+    }
+  }
+
+  private isDuplicateEmailError(error: unknown) {
+    if (!(error instanceof BadRequestException)) return false;
+
+    const response = error.getResponse();
+    const message =
+      typeof response === 'string'
+        ? response
+        : Array.isArray((response as any)?.message)
+          ? (response as any).message.join(' ')
+          : (response as any)?.message || error.message;
+
+    return String(message).toLowerCase().includes('email');
   }
 }

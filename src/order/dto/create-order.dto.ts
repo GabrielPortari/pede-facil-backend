@@ -11,6 +11,18 @@ import {
   Min,
 } from 'class-validator';
 
+class CreateOrderItemOptionsDto {
+  @ApiPropertyOptional({ example: 'Grande' })
+  @IsOptional()
+  @IsString()
+  size?: string;
+
+  @ApiPropertyOptional({ example: 'sem gelo' })
+  @IsOptional()
+  @IsString()
+  observations?: string;
+}
+
 class CreateOrderItemDto {
   @ApiProperty({ description: 'Product id', example: 'abc123' })
   @IsString()
@@ -31,18 +43,6 @@ class CreateOrderItemDto {
   @ValidateNested()
   @Type(() => CreateOrderItemOptionsDto)
   options?: CreateOrderItemOptionsDto;
-}
-
-class CreateOrderItemOptionsDto {
-  @ApiPropertyOptional({ example: 'Grande' })
-  @IsOptional()
-  @IsString()
-  size?: string;
-
-  @ApiPropertyOptional({ example: 'sem gelo' })
-  @IsOptional()
-  @IsString()
-  observations?: string;
 }
 
 export class CreateOrderDto {

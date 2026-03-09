@@ -9,8 +9,6 @@ import { UserModule } from './user/user.module';
 import { RolesModule } from './roles/roles.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
-import { OrderModule } from './order/order.module';
-import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [

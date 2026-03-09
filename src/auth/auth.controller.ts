@@ -48,8 +48,63 @@ export class AuthController {
 
   @Post('signup/business')
   @ApiOperation({ summary: 'Registra um novo negócio' })
-  @ApiBody({ type: SignupBusinessDto })
-  @ApiResponse({ status: 201, description: 'Negócio criado com sucesso.' })
+  @ApiBody({
+    type: SignupBusinessDto,
+    examples: {
+      businessSignup: {
+        summary: 'Payload oficial de cadastro de empresa',
+        value: {
+          name: 'Café do Centro',
+          legalName: 'Café do Centro LTDA',
+          cnpj: '12345678000195',
+          website: 'https://cafedocentro.com.br',
+          logoUrl: 'https://cdn.exemplo.com/logo.png',
+          contact: '+5511999999999',
+          email: 'contato@cafedocentro.com.br',
+          password: 'senhaForte123',
+          address: {
+            address: 'Rua das Flores',
+            number: '123',
+            complement: 'Sala 5',
+            neighborhood: 'Centro',
+            city: 'São Paulo',
+            state: 'SP',
+            zipcode: '01001-000',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Negócio criado com sucesso.',
+    schema: {
+      example: {
+        user: {
+          uid: 'business-uid',
+          email: 'contato@cafedocentro.com.br',
+          name: 'Café do Centro',
+          role: 'BUSINESS',
+        },
+        idToken: '<jwt>',
+        refreshToken: '<refresh-token>',
+        expiresIn: '3600',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Payload inválido.' })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Conflito de unicidade (CNPJ já cadastrado ou Email já cadastrado).',
+    schema: {
+      example: {
+        statusCode: 409,
+        message: 'CNPJ já cadastrado',
+        error: 'Conflict',
+      },
+    },
+  })
   @HttpCode(201)
   async signupBusiness(@Body() signupDto: SignupBusinessDto) {
     return this.authService.signupBusiness(signupDto as any);

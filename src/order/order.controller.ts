@@ -1,16 +1,7 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Role } from 'src/constants/roles';
 import { IdToken } from 'src/auth/dto/id-token.decorator';
@@ -25,6 +16,9 @@ export class OrderController {
 
   @Post()
   @UseGuards(RolesGuard(Role.USER))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cria um novo pedido para o usuário autenticado' })
+  @ApiResponse({ status: 201, description: 'Pedido criado com sucesso.' })
   async create(
     @IdToken() token: string,
     @Body() createOrderDto: CreateOrderDto,

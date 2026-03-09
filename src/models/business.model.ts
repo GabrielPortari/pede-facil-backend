@@ -3,6 +3,9 @@ import { BaseModel } from './base.model';
 
 export class Business extends BaseModel {
   name: string;
+  legalName: string;
+  cnpj: string;
+  website?: string;
   logoUrl?: string;
   address?: Address;
   contact: string; //TODO: tipar com formato de telefone
