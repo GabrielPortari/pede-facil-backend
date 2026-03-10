@@ -82,7 +82,6 @@ Health check simples:
 - `npm run test:watch`
 - `npm run test:cov`
 - `npm run test:e2e`
-- `npm run migrate:business-signup-fields`
 
 ## Autenticacao e autorizacao
 
@@ -260,24 +259,6 @@ Regras de negocio durante criacao:
 - Colecoes principais: `businesses`, `users`, `products`, `orders`, `promotions`, `tokens`
 - Timestamp de criacao/atualizacao aplicado no mapeamento das entidades
 - Firestore nao possui constraint unica nativa; unicidade critica e aplicada no servico de autenticacao
-
-## Migracao de dados legados
-
-Script:
-
-- `scripts/migrate-business-signup-fields.ts`
-
-Comando:
-
-```bash
-npm run migrate:business-signup-fields
-```
-
-O script:
-
-- preenche `legalName` a partir de `name` quando ausente
-- normaliza `cnpj` para 14 digitos numericos
-- ignora (`skipped`) registros sem CNPJ valido
 
 ## Testes
 
