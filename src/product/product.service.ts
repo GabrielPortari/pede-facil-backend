@@ -160,6 +160,25 @@ export class ProductService {
       });
   }
 
+  async findUnavailableByBusiness(businessId: string) {
+    const snapshot = await ProductEntity.collectionRef(businessId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snapshot.docs
+      .map((d) => ProductEntity.fromFirestore(d))
+      .filter((p) => {
+        if (p.useStock) {
+          return (p.stock ?? 0) <= 0 || !p.available;
+        }
+        return !p.available;
+      })
+      .map((p) => {
+        this.normalizeProduct(p);
+        return p;
+      });
+  }
+
   async findProductsInPromotion(businessId: string) {
     const snapshot = await ProductEntity.collectionRef(businessId)
       .orderBy('createdAt', 'desc')
@@ -260,29 +279,6 @@ export class ProductService {
 
     // apply computed discount if allowed
     this.applyDiscountFromPromotion(merged);
-
-    const data = ProductEntity.toFirestore(merged);
-    await docRef.update(data);
-    const updated = await docRef.get();
-    return ProductEntity.fromFirestore(updated);
-  }
-
-  async updateAvailability(
-    businessId: string,
-    productId: string,
-    available: boolean,
-  ) {
-    const docRef = ProductEntity.docRef(businessId, productId);
-    const doc = await docRef.get();
-    if (!doc.exists) throw new NotFoundException('Product not found');
-
-    const existing = ProductEntity.fromFirestore(doc);
-    const merged = Object.assign(new Product(existing), { available });
-
-    // if the product uses stock and stock is zero, availability must be false
-    if (merged.useStock && (merged.stock ?? 0) <= 0) {
-      merged.available = false;
-    }
 
     const data = ProductEntity.toFirestore(merged);
     await docRef.update(data);

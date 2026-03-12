@@ -137,11 +137,11 @@ Guards aplicados:
 - `POST /business/:businessId/products` (Bearer + role `business` + ownership)
 - `GET /business/:businessId/products` (publico)
 - `GET /business/:businessId/products/available` (publico)
+- `GET /business/:businessId/products/unavailable` (publico)
 - `GET /business/:businessId/products/promotions` (publico)
 - `GET /business/:businessId/products/without-promotions` (publico)
 - `GET /business/:businessId/products/:productId` (publico)
 - `PATCH /business/:businessId/products/:productId` (Bearer + role `business` + ownership)
-- `PATCH /business/:businessId/products/:productId/availability` (Bearer + role `business` + ownership)
 - `PATCH /business/:businessId/products/:productId/promotion` (Bearer + role `business` + ownership)
 - `DELETE /business/:businessId/products/:productId` (Bearer + role `business` + ownership)
 

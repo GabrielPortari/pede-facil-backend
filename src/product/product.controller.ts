@@ -13,7 +13,6 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateProductPromotionDto } from './dto/update-product-promotion.dto';
-import { UpdateProductAvailabilityDto } from './dto/update-product-availability.dto';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Role } from 'src/constants/roles';
 import { BusinessOwnerGuard } from './guards/business-owner.guard';
@@ -46,6 +45,13 @@ export class ProductController {
   @ApiResponse({ status: 200, description: 'Lista de produtos disponíveis.' })
   findAvailableByBusiness(@Param('businessId') businessId: string) {
     return this.productService.findAvailableByBusiness(businessId);
+  }
+
+  @Get('unavailable')
+  @ApiOperation({ summary: 'Lista apenas produtos indisponíveis do business' })
+  @ApiResponse({ status: 200, description: 'Lista de produtos indisponíveis.' })
+  findUnavailableByBusiness(@Param('businessId') businessId: string) {
+    return this.productService.findUnavailableByBusiness(businessId);
   }
 
   @Get('promotions')
@@ -86,26 +92,6 @@ export class ProductController {
     @Body() updateProductDto: UpdateProductDto,
   ) {
     return this.productService.update(businessId, productId, updateProductDto);
-  }
-
-  @Patch(':productId/availability')
-  @UseGuards(RolesGuard(Role.BUSINESS), BusinessOwnerGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Ativa/desativa disponibilidade do produto' })
-  @ApiResponse({
-    status: 200,
-    description: 'Disponibilidade atualizada com sucesso.',
-  })
-  updateAvailability(
-    @Param('businessId') businessId: string,
-    @Param('productId') productId: string,
-    @Body() dto: UpdateProductAvailabilityDto,
-  ) {
-    return this.productService.updateAvailability(
-      businessId,
-      productId,
-      dto.available,
-    );
   }
 
   @Patch(':productId/promotion')
