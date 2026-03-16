@@ -1,11 +1,7 @@
-import {
-  INestApplication,
-  NextFunction,
-  Request,
-  Response,
-} from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { NextFunction, Request, Response } from 'express';
 
 export type RuntimeEnvironment =
   | 'development'
@@ -53,7 +49,12 @@ export function createSwaggerBasicAuthMiddleware(
   password: string,
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const header = req.headers.authorization || '';
+    const headerFromGetter =
+      typeof req.get === 'function' ? req.get('authorization') : undefined;
+    const headerFromHeaders =
+      (req.headers as any)?.get?.('authorization') ??
+      (req.headers as any)?.authorization;
+    const header = String(headerFromGetter ?? headerFromHeaders ?? '');
     if (!header.startsWith('Basic ')) {
       res.setHeader('WWW-Authenticate', 'Basic realm="Swagger"');
       return res.status(401).send('Authentication required');
