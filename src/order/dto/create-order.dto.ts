@@ -58,14 +58,6 @@ export class CreateOrderDto {
   pickupTime?: string;
 
   @ApiPropertyOptional({
-    description: 'Address id (if delivery or for record)',
-    example: 'addr_123',
-  })
-  @IsOptional()
-  @IsString()
-  addressId?: string;
-
-  @ApiPropertyOptional({
     description: 'Observations for the whole order',
     example: 'Sem gelo em todos os itens',
   })

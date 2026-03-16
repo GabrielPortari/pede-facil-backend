@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrderService } from './order.service';
 import * as admin from 'firebase-admin';
 import { ProductEntity } from 'src/product/entities/product.entity';
+import { UserEntity } from 'src/user/entities/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('OrderService', () => {
@@ -116,6 +117,12 @@ describe('OrderService', () => {
     jest
       .spyOn(ProductEntity, 'docRef')
       .mockReturnValue(defaultProductRef as any);
+    jest.spyOn(UserEntity, 'docRef').mockReturnValue({
+      get: jest.fn(async () => ({
+        exists: true,
+        data: () => ({ name: 'João Silva' }),
+      })),
+    } as any);
     jest.spyOn(ProductEntity, 'fromFirestore').mockReturnValue({
       name: 'Cappuccino',
       available: true,
@@ -182,6 +189,30 @@ describe('OrderService', () => {
     } as any);
 
     expect(created.observations).toBe('Sem gelo em todos os itens');
+  });
+
+  it('embeds userName from user record in order', async () => {
+    const created = await service.create('user-1', {
+      businessId: 'biz-1',
+      items: [{ productId: 'prod-1', quantity: 1 }],
+      paymentMethod: 'pix',
+    } as any);
+
+    expect(created.userName).toBe('João Silva');
+  });
+
+  it('defaults userName to Unknown when user not found', async () => {
+    jest.spyOn(UserEntity, 'docRef').mockReturnValue({
+      get: jest.fn(async () => ({ exists: false, data: () => null })),
+    } as any);
+
+    const created = await service.create('user-ghost', {
+      businessId: 'biz-1',
+      items: [{ productId: 'prod-1', quantity: 1 }],
+      paymentMethod: 'pix',
+    } as any);
+
+    expect(created.userName).toBe('Unknown');
   });
 
   it('lists only orders from the requested business', async () => {

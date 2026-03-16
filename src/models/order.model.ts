@@ -13,6 +13,7 @@ type OrderStatus =
 
 export class Order extends BaseModel {
   userId: string;
+  userName: string;
   businessId: string;
   items: OrderItem[];
   observations?: string;

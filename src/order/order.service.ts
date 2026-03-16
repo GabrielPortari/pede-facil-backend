@@ -9,6 +9,7 @@ import { createHash } from 'crypto';
 import { Collections } from 'src/constants/collections';
 import { ProductEntity } from 'src/product/entities/product.entity';
 import { ListBusinessOrdersQueryDto } from './dto/list-business-orders-query.dto';
+import { UserEntity } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class OrderService {
@@ -60,6 +61,12 @@ export class OrderService {
     if (!userId) throw new BadRequestException('User not authenticated');
 
     const db = admin.firestore();
+
+    const userSnap = await UserEntity.docRef(userId).get();
+    const userName: string = userSnap.exists
+      ? ((userSnap.data() as any)?.name ?? 'Unknown')
+      : 'Unknown';
+
     const normalizedClientOrderId = this.normalizeClientOrderId(
       createOrderDto.clientOrderId,
     );
@@ -149,6 +156,7 @@ export class OrderService {
 
       const orderData = {
         userId,
+        userName,
         businessId: createOrderDto.businessId,
         items: processedItems,
         totalPrice: { amount: total, currency: 'BRL' },
