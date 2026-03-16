@@ -66,14 +66,6 @@ export class CreateOrderDto {
   addressId?: string;
 
   @ApiPropertyOptional({
-    description: 'Client notes for the order',
-    example: 'Retirar no balcão',
-  })
-  @IsOptional()
-  @IsString()
-  clientNotes?: string;
-
-  @ApiPropertyOptional({
     description: 'Observations for the whole order',
     example: 'Sem gelo em todos os itens',
   })

@@ -248,7 +248,6 @@ Exemplo:
   ],
   "paymentMethod": "card",
   "observations": "Sem gelo em todos os itens",
-  "clientNotes": "Retirar no balcao",
   "clientOrderId": "client-order-0001"
 }
 ```
@@ -260,6 +259,53 @@ Regras de negocio durante criacao:
 - valida estoque normal e promocional
 - decrementa estoques na mesma transacao
 - define status inicial do pedido como `payment_pending`
+
+### Consulta de pedidos (Business)
+
+Endpoints:
+
+- `GET /business/me/orders`
+- `GET /business/me/orders/:id`
+
+Filtros disponiveis em `GET /business/me/orders`:
+
+- `status` (opcional): `payment_pending`, `paid_awaiting_delivery`, `delivered`, `customer_confirmed`, `customer_cancelled`, `business_cancelled`
+- `limit` (opcional): inteiro entre `1` e `100` (padrao `50`)
+
+Exemplo de resposta em `GET /business/me/orders`:
+
+```json
+[
+  {
+    "id": "idem_a1b2c3d4e5f6",
+    "userId": "user-1",
+    "businessId": "biz-1",
+    "items": [
+      {
+        "productId": "prod-1",
+        "name": "Cappuccino",
+        "unitPrice": { "amount": 1299, "currency": "BRL" },
+        "quantity": 2,
+        "subtotal": { "amount": 2598, "currency": "BRL" }
+      }
+    ],
+    "totalPrice": { "amount": 2598, "currency": "BRL" },
+    "status": "payment_pending",
+    "paymentMethod": "pix",
+    "observations": "Sem gelo em todos os itens",
+    "clientOrderId": "pedido-app-000123",
+    "createdAt": "2026-03-16T18:40:12.123Z",
+    "updatedAt": "2026-03-16T18:40:12.123Z"
+  }
+]
+```
+
+Seguranca aplicada:
+
+- rota protegida por role `BUSINESS`
+- consulta sempre escopada ao `businessId` do token autenticado
+- acesso a pedido de outro negocio retorna `404` (evita enumeracao/IDOR)
+- validacao estrita de query params (`status`, `limit`) com rejeicao de campos nao permitidos
 
 ## Regras de dados e consistencia
 

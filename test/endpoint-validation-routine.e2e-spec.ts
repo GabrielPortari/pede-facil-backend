@@ -16,6 +16,7 @@ import { ProductService } from '../src/product/product.service';
 import { BusinessOwnerGuard } from '../src/product/guards/business-owner.guard';
 import { BusinessOwnerOrAdminGuard } from '../src/business/guards/business-owner-or-admin.guard';
 import { OrderController } from '../src/order/order.controller';
+import { BusinessOrderController } from '../src/order/business-order.controller';
 import { OrderService } from '../src/order/order.service';
 import { UserController } from '../src/user/user.controller';
 import { UserService } from '../src/user/user.service';
@@ -197,6 +198,12 @@ describe('Endpoint validation routine (e2e)', () => {
 
   const orderServiceMock = {
     create: jest.fn().mockResolvedValue({ id: 'order-1' }),
+    listForBusiness: jest
+      .fn()
+      .mockResolvedValue([{ id: 'order-1', businessId: 'biz-1' }]),
+    findOneForBusiness: jest
+      .fn()
+      .mockResolvedValue({ id: 'order-1', businessId: 'biz-1' }),
   };
 
   const userServiceMock = {
@@ -227,6 +234,7 @@ describe('Endpoint validation routine (e2e)', () => {
         BusinessController,
         ProductController,
         OrderController,
+        BusinessOrderController,
         UserController,
       ],
       providers: [
@@ -351,6 +359,27 @@ describe('Endpoint validation routine (e2e)', () => {
         ],
         paymentMethod: 'pix',
       })
+      .expect(400);
+  });
+
+  it('must reject invalid status query on GET /business/me/orders', async () => {
+    await request(app.getHttpServer())
+      .get('/business/me/orders?status=hacked_status')
+      .set('Authorization', 'Bearer business-owner-token')
+      .expect(400);
+  });
+
+  it('must reject limit out of range on GET /business/me/orders', async () => {
+    await request(app.getHttpServer())
+      .get('/business/me/orders?limit=500')
+      .set('Authorization', 'Bearer business-owner-token')
+      .expect(400);
+  });
+
+  it('must reject non-whitelisted query fields on GET /business/me/orders', async () => {
+    await request(app.getHttpServer())
+      .get('/business/me/orders?unexpectedFilter=true')
+      .set('Authorization', 'Bearer business-owner-token')
       .expect(400);
   });
 });

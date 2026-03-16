@@ -2,24 +2,73 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrderService } from './order.service';
 import * as admin from 'firebase-admin';
 import { ProductEntity } from 'src/product/entities/product.entity';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('OrderService', () => {
   let service: OrderService;
   let firestoreMock: any;
   let ordersStorage: Map<string, any>;
   let txUpdateMock: jest.Mock;
+  let whereMock: jest.Mock;
+  let orderByMock: jest.Mock;
+  let limitMock: jest.Mock;
+  let getQueryMock: jest.Mock;
 
   beforeEach(async () => {
     ordersStorage = new Map<string, any>();
     txUpdateMock = jest.fn();
 
     const defaultProductRef = { __kind: 'productRef', id: 'prod-1' };
-    const defaultOrderCollection = {
-      doc: (id?: string) => ({
-        __kind: 'orderRef',
-        id: id ?? 'order-random-id',
+    const buildOrderRef = (id?: string) => ({
+      __kind: 'orderRef',
+      id: id ?? 'order-random-id',
+      get: jest.fn(async () => {
+        const data = ordersStorage.get(id ?? 'order-random-id');
+        return {
+          id: id ?? 'order-random-id',
+          exists: !!data,
+          data: () => data,
+        };
       }),
+    });
+
+    getQueryMock = jest.fn(async () => ({
+      docs: Array.from(ordersStorage.entries()).map(([id, data]) => ({
+        id,
+        data: () => data,
+      })),
+    }));
+    limitMock = jest.fn(() => ({ get: getQueryMock }));
+    orderByMock = jest.fn(() => ({ limit: limitMock, where: whereMock }));
+    whereMock = jest.fn((field: string, _op: string, value: string) => {
+      if (field === 'businessId') {
+        getQueryMock.mockImplementation(async () => ({
+          docs: Array.from(ordersStorage.entries())
+            .filter(([, data]) => data.businessId === value)
+            .map(([id, data]) => ({ id, data: () => data })),
+        }));
+      }
+
+      if (field === 'status') {
+        getQueryMock.mockImplementation(async () => ({
+          docs: Array.from(ordersStorage.entries())
+            .filter(([, data]) => data.status === value)
+            .map(([id, data]) => ({ id, data: () => data })),
+        }));
+      }
+
+      return {
+        orderBy: orderByMock,
+        where: whereMock,
+        limit: limitMock,
+      };
+    });
+
+    const defaultOrderCollection = {
+      doc: buildOrderRef,
+      where: whereMock,
+      orderBy: orderByMock,
+      limit: limitMock,
     };
 
     const txMock = {
@@ -133,5 +182,45 @@ describe('OrderService', () => {
     } as any);
 
     expect(created.observations).toBe('Sem gelo em todos os itens');
+  });
+
+  it('lists only orders from the requested business', async () => {
+    ordersStorage.set('order-1', {
+      businessId: 'biz-1',
+      status: 'payment_pending',
+    });
+    ordersStorage.set('order-2', {
+      businessId: 'biz-2',
+      status: 'payment_pending',
+    });
+
+    const result = await service.listForBusiness('biz-1', { limit: 50 } as any);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('order-1');
+    expect(result[0].businessId).toBe('biz-1');
+  });
+
+  it('returns order details for same business', async () => {
+    ordersStorage.set('order-1', {
+      businessId: 'biz-1',
+      status: 'payment_pending',
+    });
+
+    const result = await service.findOneForBusiness('order-1', 'biz-1');
+
+    expect(result.id).toBe('order-1');
+    expect(result.businessId).toBe('biz-1');
+  });
+
+  it('hides foreign orders by returning not found', async () => {
+    ordersStorage.set('order-1', {
+      businessId: 'biz-1',
+      status: 'payment_pending',
+    });
+
+    await expect(
+      service.findOneForBusiness('order-1', 'biz-2'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

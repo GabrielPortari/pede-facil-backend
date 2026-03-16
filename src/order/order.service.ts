@@ -8,9 +8,54 @@ import * as admin from 'firebase-admin';
 import { createHash } from 'crypto';
 import { Collections } from 'src/constants/collections';
 import { ProductEntity } from 'src/product/entities/product.entity';
+import { ListBusinessOrdersQueryDto } from './dto/list-business-orders-query.dto';
 
 @Injectable()
 export class OrderService {
+  async listForBusiness(
+    businessId: string,
+    query: ListBusinessOrdersQueryDto = {},
+  ) {
+    const db = admin.firestore();
+    const limit = query.limit ?? 50;
+
+    let ordersQuery: any = db
+      .collection(Collections.ORDERS)
+      .where('businessId', '==', businessId)
+      .orderBy('createdAt', 'desc');
+
+    if (query.status) {
+      ordersQuery = ordersQuery.where('status', '==', query.status);
+    }
+
+    const snapshot = await ordersQuery.limit(limit).get();
+
+    return snapshot.docs.map((doc: any) => ({
+      id: doc.id,
+      ...(doc.data() ?? {}),
+    }));
+  }
+
+  async findOneForBusiness(orderId: string, businessId: string) {
+    const doc = await admin
+      .firestore()
+      .collection(Collections.ORDERS)
+      .doc(orderId)
+      .get();
+
+    if (!doc.exists) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const data = doc.data() ?? {};
+    if (data.businessId !== businessId) {
+      // Avoids leaking order existence across businesses.
+      throw new NotFoundException('Order not found');
+    }
+
+    return { id: doc.id, ...data };
+  }
+
   async create(userId: string, createOrderDto: CreateOrderDto) {
     if (!userId) throw new BadRequestException('User not authenticated');
 
@@ -109,7 +154,6 @@ export class OrderService {
         totalPrice: { amount: total, currency: 'BRL' },
         status: 'payment_pending',
         paymentMethod: createOrderDto.paymentMethod,
-        clientNotes: createOrderDto.clientNotes ?? null,
         observations: createOrderDto.observations ?? null,
         clientOrderId: normalizedClientOrderId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),

@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   INestApplication,
+  NotFoundException,
   ValidationPipe,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -15,6 +16,7 @@ import { ProductController } from '../src/product/product.controller';
 import { ProductService } from '../src/product/product.service';
 import { BusinessOwnerGuard } from '../src/product/guards/business-owner.guard';
 import { OrderController } from '../src/order/order.controller';
+import { BusinessOrderController } from '../src/order/business-order.controller';
 import { OrderService } from '../src/order/order.service';
 import { UserController } from '../src/user/user.controller';
 import { UserService } from '../src/user/user.service';
@@ -90,6 +92,17 @@ const protectedEndpoints: ProtectedEndpointCase[] = [
     title: 'DELETE /business/:businessId/products/:productId',
     method: 'delete',
     path: '/business/biz-1/products/prod-1',
+  },
+
+  {
+    title: 'GET /business/me/orders',
+    method: 'get',
+    path: '/business/me/orders',
+  },
+  {
+    title: 'GET /business/me/orders/:id',
+    method: 'get',
+    path: '/business/me/orders/order-1',
   },
 
   { title: 'POST /order', method: 'post', path: '/order', body: {} },
@@ -170,6 +183,18 @@ describe('Endpoint security routine (e2e)', () => {
 
   const orderServiceMock = {
     create: jest.fn().mockResolvedValue({ id: 'order-1' }),
+    listForBusiness: jest.fn(async (businessId: string) => {
+      if (businessId === 'biz-1') {
+        return [{ id: 'order-1', businessId: 'biz-1' }];
+      }
+      return [];
+    }),
+    findOneForBusiness: jest.fn(async (orderId: string, businessId: string) => {
+      if (orderId === 'order-1' && businessId === 'biz-1') {
+        return { id: 'order-1', businessId: 'biz-1' };
+      }
+      throw new NotFoundException('Order not found');
+    }),
   };
 
   const userServiceMock = {
@@ -201,6 +226,7 @@ describe('Endpoint security routine (e2e)', () => {
         BusinessController,
         ProductController,
         OrderController,
+        BusinessOrderController,
         UserController,
         RolesController,
       ],
@@ -282,5 +308,19 @@ describe('Endpoint security routine (e2e)', () => {
     expect(response.body).not.toHaveProperty('document');
     expect(response.body).not.toHaveProperty('address');
     expect(response.body).not.toHaveProperty('contact');
+  });
+
+  it('must deny non-business role on GET /business/me/orders', async () => {
+    await request(app.getHttpServer())
+      .get('/business/me/orders')
+      .set('Authorization', 'Bearer user-token')
+      .expect(403);
+  });
+
+  it('must hide foreign order access on GET /business/me/orders/:id', async () => {
+    await request(app.getHttpServer())
+      .get('/business/me/orders/order-1')
+      .set('Authorization', 'Bearer business-other-token')
+      .expect(404);
   });
 });
