@@ -14,6 +14,8 @@ import { Role } from 'src/constants/roles';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { IdToken } from 'src/auth/dto/id-token.decorator';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { BusinessOwnerOrAdminGuard } from './guards/business-owner-or-admin.guard';
+import { UpdateBusinessComplianceDto } from './dto/update-business-compliance.dto';
 
 @Controller('business')
 export class BusinessController {
@@ -60,7 +62,7 @@ export class BusinessController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard(Role.BUSINESS))
+  @UseGuards(RolesGuard(Role.BUSINESS, Role.ADMIN), BusinessOwnerOrAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualiza um negócio pelo ID' })
   @ApiResponse({ status: 200, description: 'Negócio atualizado com sucesso.' })
@@ -69,6 +71,21 @@ export class BusinessController {
     @Body() updateBusinessDto: UpdateBusinessDto,
   ) {
     return this.businessService.update(id, updateBusinessDto);
+  }
+
+  @Patch(':id/compliance')
+  @UseGuards(RolesGuard(Role.ADMIN))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Atualiza campos de compliance do negócio (admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Campos de compliance atualizados com sucesso.',
+  })
+  updateCompliance(
+    @Param('id') id: string,
+    @Body() updateComplianceDto: UpdateBusinessComplianceDto,
+  ) {
+    return this.businessService.updateCompliance(id, updateComplianceDto);
   }
 
   @Delete(':id')

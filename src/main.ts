@@ -1,24 +1,29 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  applyEdgeHardening,
+  resolveCorsOrigins,
+  resolveEnvironment,
+} from './edge-hardening';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  configureSwagger(app);
+  configureEdgeHardening(app);
   configureValidationPipe(app);
   await app.listen(process.env.PORT ?? 3000);
 }
 
-function configureSwagger(app: INestApplication) {
-  const config = new DocumentBuilder()
-    .setTitle('Pede Fácil API')
-    .setDescription('API documentation for Pede Fácil application')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+function configureEdgeHardening(app: INestApplication) {
+  const env = resolveEnvironment(process.env.NODE_ENV);
+  const corsOrigins = resolveCorsOrigins(process.env.CORS_ORIGINS);
+
+  applyEdgeHardening(app, {
+    env,
+    corsOrigins,
+    swaggerUsername: process.env.SWAGGER_USERNAME,
+    swaggerPassword: process.env.SWAGGER_PASSWORD,
+  });
 }
 
 function configureValidationPipe(app: INestApplication) {

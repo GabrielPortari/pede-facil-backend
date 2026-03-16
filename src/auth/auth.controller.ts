@@ -21,6 +21,7 @@ import { AuthGuard } from './auth.guard';
 import { SignupUserDto } from './dto/signup-user.dto';
 import { SignupBusinessDto } from './dto/signup-business.dto';
 import { RecoverPasswordDto } from './dto/recover-password.dto';
+import { AuthRateLimitGuard } from './auth-rate-limit.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +34,7 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Login realizado com sucesso.' })
   @Post('login')
+  @UseGuards(AuthRateLimitGuard)
   @HttpCode(200)
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -116,6 +118,7 @@ export class AuthController {
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({ status: 200, description: 'Token renovado com sucesso.' })
   @HttpCode(200)
+  @UseGuards(AuthRateLimitGuard)
   async refreshAuthToken(@Body() refreshToken: RefreshTokenDto) {
     return this.authService.refreshAuthToken(refreshToken.refreshToken);
   }
@@ -128,6 +131,7 @@ export class AuthController {
     description: 'E-mail de recuperação enviado com sucesso.',
   })
   @HttpCode(200)
+  @UseGuards(AuthRateLimitGuard)
   async recoverPassword(@Body() recoverPasswordDto: RecoverPasswordDto) {
     return this.authService.recoverPassword(recoverPasswordDto.email);
   }

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import * as admin from 'firebase-admin';
+import { createHash } from 'crypto';
 import { Collections } from 'src/constants/collections';
 import { ProductEntity } from 'src/product/entities/product.entity';
 
@@ -14,9 +15,30 @@ export class OrderService {
     if (!userId) throw new BadRequestException('User not authenticated');
 
     const db = admin.firestore();
-    const orderRef = db.collection(Collections.ORDERS).doc();
+    const normalizedClientOrderId = this.normalizeClientOrderId(
+      createOrderDto.clientOrderId,
+    );
+    const orderRef = normalizedClientOrderId
+      ? db
+          .collection(Collections.ORDERS)
+          .doc(
+            this.buildIdempotentOrderDocId(
+              userId,
+              createOrderDto.businessId,
+              normalizedClientOrderId,
+            ),
+          )
+      : db.collection(Collections.ORDERS).doc();
 
     const result = await db.runTransaction(async (tx) => {
+      if (normalizedClientOrderId) {
+        const existingOrderDoc = await tx.get(orderRef);
+        if (existingOrderDoc.exists) {
+          const existingData = existingOrderDoc.data() ?? {};
+          return { id: existingOrderDoc.id, ...existingData };
+        }
+      }
+
       let total = 0;
       const processedItems: any[] = [];
 
@@ -30,6 +52,10 @@ export class OrderService {
           throw new NotFoundException(`Product ${item.productId} not found`);
 
         const p = ProductEntity.fromFirestore(prodSnap) as any;
+
+        if (p.available === false) {
+          throw new BadRequestException(`Product ${p.name} is unavailable`);
+        }
 
         // availability and stock checks
         if (p.useStock && (p.stock ?? 0) < item.quantity) {
@@ -85,7 +111,7 @@ export class OrderService {
         status: 'payment_pending',
         paymentMethod: createOrderDto.paymentMethod,
         clientNotes: createOrderDto.clientNotes ?? null,
-        clientOrderId: createOrderDto.clientOrderId ?? null,
+        clientOrderId: normalizedClientOrderId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       } as any;
@@ -95,5 +121,20 @@ export class OrderService {
     });
 
     return result;
+  }
+
+  private normalizeClientOrderId(clientOrderId?: string | null): string | null {
+    const normalized = String(clientOrderId || '').trim();
+    return normalized.length > 0 ? normalized : null;
+  }
+
+  private buildIdempotentOrderDocId(
+    userId: string,
+    businessId: string,
+    clientOrderId: string,
+  ) {
+    const raw = `${userId}:${businessId}:${clientOrderId}`;
+    const digest = createHash('sha256').update(raw).digest('hex').slice(0, 32);
+    return `idem_${digest}`;
   }
 }

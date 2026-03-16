@@ -28,6 +28,10 @@ Defina as variaveis abaixo no ambiente de execucao:
 - `FIREBASE_API_KEY`: API key usada para chamadas REST do Firebase Auth (login, refresh, recover-password)
 - `FIREBASE_ADMIN_CREDENTIALS`: JSON da service account em formato string
 - `PORT` (opcional): porta da API (default `3000`)
+- `NODE_ENV` (opcional): `development`, `staging` ou `production` (default `development`)
+- `CORS_ORIGINS` (opcional): lista de origens permitidas separadas por virgula
+- `SWAGGER_USERNAME` (opcional): usuario do Basic Auth para Swagger em staging
+- `SWAGGER_PASSWORD` (opcional): senha do Basic Auth para Swagger em staging
 
 Exemplo de `FIREBASE_ADMIN_CREDENTIALS`:
 
@@ -64,6 +68,12 @@ npm run start:prod
 Documentacao Swagger:
 
 - `http://localhost:3000/api`
+
+Regras de exposicao do Swagger:
+
+- `development`: habilitado
+- `staging`: habilitado e protegido com Basic Auth
+- `production`: desabilitado
 
 Health check simples:
 

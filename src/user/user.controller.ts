@@ -13,18 +13,29 @@ import { Role } from 'src/constants/roles';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { UserOwnerGuard } from './guards/user-owner.guard';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { IdToken } from 'src/auth/dto/id-token.decorator';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { UserBusinessViewDto } from './dto/user-business-view.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   @Get(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtém os dados de um usuário' })
-  @ApiResponse({ status: 200, description: 'Dados do usuário.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Dados do usuário.',
+    type: UserBusinessViewDto,
+  })
   @UseGuards(RolesGuard(Role.BUSINESS))
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: string, @IdToken() token: string) {
+    const { uid } = await this.firebaseService.verifyIdToken(token, true);
+    return this.userService.findOneForBusiness(id, uid);
   }
 
   @Get('me')
