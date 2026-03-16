@@ -99,7 +99,6 @@ export class OrderService {
           unitPrice: { amount: unitAmount, currency },
           quantity: item.quantity,
           subtotal: { amount: subtotal, currency },
-          options: item.options,
         });
       }
 
@@ -111,6 +110,7 @@ export class OrderService {
         status: 'payment_pending',
         paymentMethod: createOrderDto.paymentMethod,
         clientNotes: createOrderDto.clientNotes ?? null,
+        observations: createOrderDto.observations ?? null,
         clientOrderId: normalizedClientOrderId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),

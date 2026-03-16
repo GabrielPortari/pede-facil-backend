@@ -243,14 +243,11 @@ Exemplo:
   "items": [
     {
       "productId": "prod_1",
-      "quantity": 2,
-      "options": {
-        "size": "Grande",
-        "observations": "sem gelo"
-      }
+      "quantity": 2
     }
   ],
   "paymentMethod": "card",
+  "observations": "Sem gelo em todos os itens",
   "clientNotes": "Retirar no balcao",
   "clientOrderId": "client-order-0001"
 }

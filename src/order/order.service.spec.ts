@@ -123,4 +123,15 @@ describe('OrderService', () => {
     expect(second.id).toBe(first.id);
     expect(txUpdateMock).toHaveBeenCalledTimes(1);
   });
+
+  it('persists order observations when provided', async () => {
+    const created = await service.create('user-1', {
+      businessId: 'biz-1',
+      items: [{ productId: 'prod-1', quantity: 1 }],
+      paymentMethod: 'pix',
+      observations: 'Sem gelo em todos os itens',
+    } as any);
+
+    expect(created.observations).toBe('Sem gelo em todos os itens');
+  });
 });

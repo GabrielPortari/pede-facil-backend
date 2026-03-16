@@ -315,4 +315,42 @@ describe('Endpoint validation routine (e2e)', () => {
       })
       .expect(400);
   });
+
+  it('must accept observations on POST /order', async () => {
+    await request(app.getHttpServer())
+      .post('/order')
+      .set('Authorization', 'Bearer user-token')
+      .send({
+        businessId: 'biz-1',
+        items: [{ productId: 'prod-1', quantity: 1 }],
+        paymentMethod: 'pix',
+        observations: 'Sem gelo em todos os itens',
+      })
+      .expect(201);
+
+    expect(orderServiceMock.create).toHaveBeenCalledWith('user-1', {
+      businessId: 'biz-1',
+      items: [{ productId: 'prod-1', quantity: 1 }],
+      paymentMethod: 'pix',
+      observations: 'Sem gelo em todos os itens',
+    });
+  });
+
+  it('must reject legacy items[].options payload on POST /order', async () => {
+    await request(app.getHttpServer())
+      .post('/order')
+      .set('Authorization', 'Bearer user-token')
+      .send({
+        businessId: 'biz-1',
+        items: [
+          {
+            productId: 'prod-1',
+            quantity: 1,
+            options: { size: 'G' },
+          },
+        ],
+        paymentMethod: 'pix',
+      })
+      .expect(400);
+  });
 });

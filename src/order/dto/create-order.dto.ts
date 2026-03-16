@@ -12,18 +12,6 @@ import {
   Min,
 } from 'class-validator';
 
-class CreateOrderItemOptionsDto {
-  @ApiPropertyOptional({ example: 'Grande' })
-  @IsOptional()
-  @IsString()
-  size?: string;
-
-  @ApiPropertyOptional({ example: 'sem gelo' })
-  @IsOptional()
-  @IsString()
-  observations?: string;
-}
-
 class CreateOrderItemDto {
   @ApiProperty({ description: 'Product id', example: 'abc123' })
   @IsString()
@@ -34,16 +22,6 @@ class CreateOrderItemDto {
   @IsInt()
   @Min(1)
   quantity: number;
-
-  @ApiPropertyOptional({
-    description: 'Options or notes for the item',
-    type: Object,
-    example: { size: 'Grande', observations: 'sem gelo' },
-  })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreateOrderItemOptionsDto)
-  options?: CreateOrderItemOptionsDto;
 }
 
 export class CreateOrderDto {
@@ -94,6 +72,14 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   clientNotes?: string;
+
+  @ApiPropertyOptional({
+    description: 'Observations for the whole order',
+    example: 'Sem gelo em todos os itens',
+  })
+  @IsOptional()
+  @IsString()
+  observations?: string;
 
   @ApiPropertyOptional({
     description: 'Client-provided id for idempotency',

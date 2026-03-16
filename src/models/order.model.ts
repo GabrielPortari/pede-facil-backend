@@ -15,6 +15,7 @@ export class Order extends BaseModel {
   userId: string;
   businessId: string;
   items: OrderItem[];
+  observations?: string;
   totalPrice: Money;
   status: OrderStatus;
 
