@@ -272,7 +272,7 @@ Endpoints:
 
 Filtros disponiveis em `GET /business/me/orders`:
 
-- `status` (opcional): `payment_pending`, `paid_awaiting_delivery`, `delivered`, `customer_confirmed`, `customer_cancelled`, `business_cancelled`
+- `status` (opcional): `payment_pending`, `paid_awaiting_delivery`, `delivered`, `customer_confirmed`, `customer_declined`, `customer_cancelled`, `business_cancelled`
 - `limit` (opcional): inteiro entre `1` e `100` (padrao `50`)
 
 Exemplo de resposta em `GET /business/me/orders`:
@@ -362,7 +362,7 @@ Payload exemplo (usuario):
 
 ```json
 {
-  "status": "customer_confirmed"
+  "status": "paid_awaiting_delivery"
 }
 ```
 
@@ -370,6 +370,9 @@ Transicoes permitidas para usuario:
 
 - `payment_pending` -> `customer_cancelled`
 - `delivered` -> `customer_confirmed`
+- `delivered` -> `customer_declined`
+- `customer_declined` -> `paid_awaiting_delivery`
+- `customer_declined` -> `customer_cancelled`
 
 Endpoint para business:
 
@@ -389,6 +392,7 @@ Transicoes permitidas para business:
 - `paid_awaiting_delivery` -> `delivered`
 - `payment_pending` -> `business_cancelled`
 - `paid_awaiting_delivery` -> `business_cancelled`
+- `customer_declined` -> `business_cancelled`
 
 Seguranca aplicada nas transicoes:
 
@@ -402,7 +406,7 @@ Exemplo de erro 400 em `PATCH /order/:id/status`:
 ```json
 {
   "statusCode": 400,
-  "message": "Invalid status transition from payment_pending to customer_confirmed",
+  "message": "Invalid status transition from payment_pending to customer_declined",
   "error": "Bad Request"
 }
 ```

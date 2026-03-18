@@ -3,6 +3,7 @@ export const ORDER_STATUSES = [
   'paid_awaiting_delivery',
   'delivered',
   'customer_confirmed',
+  'customer_declined',
   'customer_cancelled',
   'business_cancelled',
 ] as const;
@@ -10,7 +11,9 @@ export const ORDER_STATUSES = [
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const USER_ORDER_STATUS_UPDATES = [
+  'paid_awaiting_delivery',
   'customer_confirmed',
+  'customer_declined',
   'customer_cancelled',
 ] as const;
 

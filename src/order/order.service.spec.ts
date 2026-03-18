@@ -321,6 +321,74 @@ describe('OrderService', () => {
     expect(ordersStorage.get('order-1')?.status).toBe('customer_confirmed');
   });
 
+  it('allows user to decline after delivered', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'delivered',
+    });
+
+    const result = await service.updateStatusForUser(
+      'user-1',
+      'order-1',
+      'customer_declined',
+    );
+
+    expect(result.status).toBe('customer_declined');
+    expect(ordersStorage.get('order-1')?.status).toBe('customer_declined');
+  });
+
+  it('allows user to request the product again after declined', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'customer_declined',
+    });
+
+    const result = await service.updateStatusForUser(
+      'user-1',
+      'order-1',
+      'paid_awaiting_delivery',
+    );
+
+    expect(result.status).toBe('paid_awaiting_delivery');
+    expect(ordersStorage.get('order-1')?.status).toBe('paid_awaiting_delivery');
+  });
+
+  it('allows user to cancel after declined', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'customer_declined',
+    });
+
+    const result = await service.updateStatusForUser(
+      'user-1',
+      'order-1',
+      'customer_cancelled',
+    );
+
+    expect(result.status).toBe('customer_cancelled');
+    expect(ordersStorage.get('order-1')?.status).toBe('customer_cancelled');
+  });
+
+  it('allows business to cancel after customer_declined', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'customer_declined',
+    });
+
+    const result = await service.updateStatusForBusiness(
+      'biz-1',
+      'order-1',
+      'business_cancelled',
+    );
+
+    expect(result.status).toBe('business_cancelled');
+    expect(ordersStorage.get('order-1')?.status).toBe('business_cancelled');
+  });
+
   it('rejects user transition when order is not owned by user', async () => {
     ordersStorage.set('order-1', {
       userId: 'user-1',

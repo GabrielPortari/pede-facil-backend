@@ -17,8 +17,10 @@ import {
 } from './order-status.constants';
 
 const USER_STATUS_TRANSITIONS: Record<UserOrderStatusUpdate, OrderStatus[]> = {
-  customer_cancelled: ['payment_pending'],
+  paid_awaiting_delivery: ['customer_declined'],
+  customer_cancelled: ['payment_pending', 'customer_declined'],
   customer_confirmed: ['delivered'],
+  customer_declined: ['delivered'],
 };
 
 const BUSINESS_STATUS_TRANSITIONS: Record<
@@ -27,7 +29,11 @@ const BUSINESS_STATUS_TRANSITIONS: Record<
 > = {
   paid_awaiting_delivery: ['payment_pending'],
   delivered: ['paid_awaiting_delivery'],
-  business_cancelled: ['payment_pending', 'paid_awaiting_delivery'],
+  business_cancelled: [
+    'payment_pending',
+    'paid_awaiting_delivery',
+    'customer_declined',
+  ],
 };
 
 @Injectable()

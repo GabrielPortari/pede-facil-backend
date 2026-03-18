@@ -8,6 +8,7 @@ type OrderStatus =
   | 'paid_awaiting_delivery'
   | 'delivered'
   | 'customer_confirmed'
+  | 'customer_declined'
   | 'customer_cancelled'
   | 'business_cancelled';
 

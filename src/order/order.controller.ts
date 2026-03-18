@@ -88,10 +88,11 @@ export class OrderController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualiza o status de um pedido do usuário' })
   @ApiBody({
-    description: 'Status permitido para o usuário autenticado',
+    description:
+      'Status permitido para o usuário autenticado (inclui reenvio após customer_declined)',
     schema: {
       example: {
-        status: 'customer_confirmed',
+        status: 'paid_awaiting_delivery',
       },
     },
   })
@@ -101,7 +102,7 @@ export class OrderController {
     schema: {
       example: {
         id: 'order_123',
-        status: 'customer_confirmed',
+        status: 'paid_awaiting_delivery',
       },
     },
   })
@@ -112,7 +113,7 @@ export class OrderController {
       example: {
         statusCode: 400,
         message:
-          'Invalid status transition from payment_pending to customer_confirmed',
+          'Invalid status transition from payment_pending to customer_declined',
         error: 'Bad Request',
       },
     },
