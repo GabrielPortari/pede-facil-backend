@@ -158,6 +158,9 @@ Guards aplicados:
 ### Order (`/order`)
 
 - `POST /order` (Bearer + role `user`)
+- `POST /order/:id/simulate-payment` (Bearer + role `user`, quebra-galho para marcar pagamento)
+- `PATCH /order/:id/status` (Bearer + role `user`)
+- `PATCH /business/me/orders/:id/status` (Bearer + role `business`)
 
 ### Roles (`/roles`)
 
@@ -307,6 +310,123 @@ Seguranca aplicada:
 - acesso a pedido de outro negocio retorna `404` (evita enumeracao/IDOR)
 - validacao estrita de query params (`status`, `limit`) com rejeicao de campos nao permitidos
 
+### Simulacao de pagamento (temporario)
+
+Endpoint:
+
+- `POST /order/:id/simulate-payment`
+
+Objetivo:
+
+- endpoint temporario para ambiente de desenvolvimento/homologacao
+- simula confirmacao de pagamento do proprio pedido do usuario
+- transicao aplicada: `payment_pending` -> `paid_awaiting_delivery`
+
+Exemplo de resposta:
+
+```json
+{
+  "id": "order_123",
+  "status": "paid_awaiting_delivery",
+  "paymentMethod": "pix"
+}
+```
+
+Exemplo de erro 400 (transicao invalida):
+
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid status transition from delivered to paid_awaiting_delivery",
+  "error": "Bad Request"
+}
+```
+
+Exemplo de erro 404 (pedido nao encontrado ou sem ownership):
+
+```json
+{
+  "statusCode": 404,
+  "message": "Order not found",
+  "error": "Not Found"
+}
+```
+
+### Atualizacao de status de pedidos
+
+Endpoint para usuario:
+
+- `PATCH /order/:id/status`
+
+Payload exemplo (usuario):
+
+```json
+{
+  "status": "customer_confirmed"
+}
+```
+
+Transicoes permitidas para usuario:
+
+- `payment_pending` -> `customer_cancelled`
+- `delivered` -> `customer_confirmed`
+
+Endpoint para business:
+
+- `PATCH /business/me/orders/:id/status`
+
+Payload exemplo (business):
+
+```json
+{
+  "status": "delivered"
+}
+```
+
+Transicoes permitidas para business:
+
+- `payment_pending` -> `paid_awaiting_delivery`
+- `paid_awaiting_delivery` -> `delivered`
+- `payment_pending` -> `business_cancelled`
+- `paid_awaiting_delivery` -> `business_cancelled`
+
+Seguranca aplicada nas transicoes:
+
+- usuario so altera pedidos em que `userId` corresponde ao token
+- business so altera pedidos em que `businessId` corresponde ao token
+- acesso indevido retorna `404` para evitar enumeracao
+- transicao invalida retorna `400`
+
+Exemplo de erro 400 em `PATCH /order/:id/status`:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid status transition from payment_pending to customer_confirmed",
+  "error": "Bad Request"
+}
+```
+
+Exemplo de erro 400 em `PATCH /business/me/orders/:id/status`:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid status transition from payment_pending to delivered",
+  "error": "Bad Request"
+}
+```
+
+Exemplo de erro 404 (ambos os PATCH):
+
+```json
+{
+  "statusCode": 404,
+  "message": "Order not found",
+  "error": "Not Found"
+}
+```
+
 ## Regras de dados e consistencia
 
 - Colecoes principais: `businesses`, `users`, `products`, `orders`, `promotions`, `tokens`
@@ -323,4 +443,4 @@ Estrutura atual inclui:
 ## Observacoes do estado atual
 
 - O endpoint `GET /user/me/orders` ainda nao retorna dados (implementacao comentada no controller)
-- O modulo de pedidos atualmente expoe criacao de pedido; atualizacoes/listagens de status ainda podem ser evoluidas
+- O endpoint de simulacao de pagamento e temporario e deve ser substituido por webhook/gateway real

@@ -21,7 +21,7 @@ Tecnologias recomendadas
 
 Funcionalidades principais (ambos os lados)
 
-- Fluxo de pedido: `payment_pending` -> `paid_awaiting_pickup` -> `picked_up` -> `customer_confirmed`.
+- Fluxo de pedido: `payment_pending` -> `paid_awaiting_delivery` -> `delivered` -> `customer_confirmed`.
 - Autenticação e roles: `USER` e `BUSINESS` (e `ADMIN`). Endpoints protegidos por guards; verificação de ownership para operações por id.
 - Produtos: CRUD, imagem via Storage, controle de estoque e promoções com estoque promocional opcional.
 - Promoções: ativar/desativar, preço com desconto e estoque promocional.
@@ -39,6 +39,9 @@ Back-end — diretrizes e endpoints (exemplos)
 
 Boas práticas back-end
 
+- Verificar brechas de segurança, especialmente em endpoints que modificam dados sensíveis (ex: estoque, status de pedido).
+- Realizar pentestes de segurança e validação de entrada rigorosa para evitar injeção ou manipulação de dados.
+- Verificar se há exposição de dados sensíveis (ex: IDs, tokens) em logs ou respostas de API.
 - Validar e sanitizar todos os DTOs (class-validator/class-transformer). Use DTOs claros para requests/responses.
 - Usar transações do Firestore para operações de pedido/estoque.
 - Guardas: `RolesGuard`, `BusinessOwnerGuard` para garantir ownership quando necessário.

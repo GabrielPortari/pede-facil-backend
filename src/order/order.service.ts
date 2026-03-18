@@ -10,6 +10,25 @@ import { Collections } from 'src/constants/collections';
 import { ProductEntity } from 'src/product/entities/product.entity';
 import { ListBusinessOrdersQueryDto } from './dto/list-business-orders-query.dto';
 import { UserEntity } from 'src/user/entities/user.entity';
+import {
+  BusinessOrderStatusUpdate,
+  OrderStatus,
+  UserOrderStatusUpdate,
+} from './order-status.constants';
+
+const USER_STATUS_TRANSITIONS: Record<UserOrderStatusUpdate, OrderStatus[]> = {
+  customer_cancelled: ['payment_pending'],
+  customer_confirmed: ['delivered'],
+};
+
+const BUSINESS_STATUS_TRANSITIONS: Record<
+  BusinessOrderStatusUpdate,
+  OrderStatus[]
+> = {
+  paid_awaiting_delivery: ['payment_pending'],
+  delivered: ['paid_awaiting_delivery'],
+  business_cancelled: ['payment_pending', 'paid_awaiting_delivery'],
+};
 
 @Injectable()
 export class OrderService {
@@ -55,6 +74,44 @@ export class OrderService {
     }
 
     return { id: doc.id, ...data };
+  }
+
+  async simulatePayment(userId: string, orderId: string) {
+    return this.updateOrderStatus({
+      orderId,
+      ownerField: 'userId',
+      ownerId: userId,
+      nextStatus: 'paid_awaiting_delivery',
+      allowedCurrentStatuses: ['payment_pending'],
+    });
+  }
+
+  async updateStatusForUser(
+    userId: string,
+    orderId: string,
+    nextStatus: UserOrderStatusUpdate,
+  ) {
+    return this.updateOrderStatus({
+      orderId,
+      ownerField: 'userId',
+      ownerId: userId,
+      nextStatus,
+      allowedCurrentStatuses: USER_STATUS_TRANSITIONS[nextStatus],
+    });
+  }
+
+  async updateStatusForBusiness(
+    businessId: string,
+    orderId: string,
+    nextStatus: BusinessOrderStatusUpdate,
+  ) {
+    return this.updateOrderStatus({
+      orderId,
+      ownerField: 'businessId',
+      ownerId: businessId,
+      nextStatus,
+      allowedCurrentStatuses: BUSINESS_STATUS_TRANSITIONS[nextStatus],
+    });
   }
 
   async create(userId: string, createOrderDto: CreateOrderDto) {
@@ -188,5 +245,56 @@ export class OrderService {
     const raw = `${userId}:${businessId}:${clientOrderId}`;
     const digest = createHash('sha256').update(raw).digest('hex').slice(0, 32);
     return `idem_${digest}`;
+  }
+
+  private async updateOrderStatus(params: {
+    orderId: string;
+    ownerField: 'userId' | 'businessId';
+    ownerId: string;
+    nextStatus: OrderStatus;
+    allowedCurrentStatuses: OrderStatus[];
+  }) {
+    const { orderId, ownerField, ownerId, nextStatus, allowedCurrentStatuses } =
+      params;
+
+    const db = admin.firestore();
+    const orderRef = db.collection(Collections.ORDERS).doc(orderId);
+
+    return db.runTransaction(async (tx) => {
+      const orderDoc = await tx.get(orderRef);
+      if (!orderDoc.exists) {
+        throw new NotFoundException('Order not found');
+      }
+
+      const orderData = orderDoc.data() ?? {};
+      if (orderData[ownerField] !== ownerId) {
+        // Prevents leaking existence to foreign users/businesses.
+        throw new NotFoundException('Order not found');
+      }
+
+      const currentStatus = orderData.status as OrderStatus;
+      if (currentStatus === nextStatus) {
+        return { id: orderDoc.id, ...orderData };
+      }
+
+      if (!allowedCurrentStatuses.includes(currentStatus)) {
+        throw new BadRequestException(
+          `Invalid status transition from ${currentStatus} to ${nextStatus}`,
+        );
+      }
+
+      const updatedAt = admin.firestore.FieldValue.serverTimestamp();
+      tx.update(orderRef, {
+        status: nextStatus,
+        updatedAt,
+      });
+
+      return {
+        id: orderDoc.id,
+        ...orderData,
+        status: nextStatus,
+        updatedAt,
+      };
+    });
   }
 }

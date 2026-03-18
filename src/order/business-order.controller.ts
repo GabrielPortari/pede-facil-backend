@@ -1,11 +1,25 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { IdToken } from 'src/auth/dto/id-token.decorator';
 import { Role } from 'src/constants/roles';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { OrderService } from './order.service';
 import { ListBusinessOrdersQueryDto } from './dto/list-business-orders-query.dto';
+import { UpdateBusinessOrderStatusDto } from './dto/update-business-order-status.dto';
 
 @Controller('business/me/orders')
 export class BusinessOrderController {
@@ -36,5 +50,58 @@ export class BusinessOrderController {
   async findOneMine(@IdToken() token: string, @Param('id') id: string) {
     const { uid } = await this.firebaseService.verifyIdToken(token, true);
     return this.orderService.findOneForBusiness(id, uid);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(RolesGuard(Role.BUSINESS))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Atualiza o status de um pedido do negócio' })
+  @ApiBody({
+    description: 'Status permitido para o negócio autenticado',
+    schema: {
+      example: {
+        status: 'delivered',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Status atualizado com sucesso.',
+    schema: {
+      example: {
+        id: 'order_123',
+        status: 'delivered',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Transição de status inválida.',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Invalid status transition from payment_pending to delivered',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pedido não encontrado.',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Order not found',
+        error: 'Not Found',
+      },
+    },
+  })
+  async updateStatus(
+    @IdToken() token: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateBusinessOrderStatusDto,
+  ) {
+    const { uid } = await this.firebaseService.verifyIdToken(token, true);
+    return this.orderService.updateStatusForBusiness(uid, id, dto.status);
   }
 }

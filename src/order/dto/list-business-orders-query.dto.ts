@@ -1,17 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { ORDER_STATUSES, OrderStatus } from '../order-status.constants';
 
-const ORDER_STATUSES = [
-  'payment_pending',
-  'paid_awaiting_delivery',
-  'delivered',
-  'customer_confirmed',
-  'customer_cancelled',
-  'business_cancelled',
-] as const;
-
-export type OrderStatusFilter = (typeof ORDER_STATUSES)[number];
+export type OrderStatusFilter = OrderStatus;
 
 export class ListBusinessOrdersQueryDto {
   @ApiPropertyOptional({

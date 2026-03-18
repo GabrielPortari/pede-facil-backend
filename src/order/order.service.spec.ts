@@ -17,7 +17,14 @@ describe('OrderService', () => {
 
   beforeEach(async () => {
     ordersStorage = new Map<string, any>();
-    txUpdateMock = jest.fn();
+    txUpdateMock = jest.fn((ref: any, updates: Record<string, any>) => {
+      if (ref?.__kind !== 'orderRef') {
+        return;
+      }
+
+      const existing = ordersStorage.get(ref.id) ?? {};
+      ordersStorage.set(ref.id, { ...existing, ...updates });
+    });
 
     const defaultProductRef = { __kind: 'productRef', id: 'prod-1' };
     const buildOrderRef = (id?: string) => ({
@@ -252,6 +259,77 @@ describe('OrderService', () => {
 
     await expect(
       service.findOneForBusiness('order-1', 'biz-2'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('simulates payment and moves from payment_pending to paid_awaiting_delivery', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'payment_pending',
+    });
+
+    const result = await service.simulatePayment('user-1', 'order-1');
+
+    expect(result.status).toBe('paid_awaiting_delivery');
+    expect(ordersStorage.get('order-1')?.status).toBe('paid_awaiting_delivery');
+  });
+
+  it('rejects invalid simulated payment transition', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'delivered',
+    });
+
+    await expect(
+      service.simulatePayment('user-1', 'order-1'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('allows business to move paid_awaiting_delivery to delivered', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'paid_awaiting_delivery',
+    });
+
+    const result = await service.updateStatusForBusiness(
+      'biz-1',
+      'order-1',
+      'delivered',
+    );
+
+    expect(result.status).toBe('delivered');
+    expect(ordersStorage.get('order-1')?.status).toBe('delivered');
+  });
+
+  it('allows user to confirm after delivered', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'delivered',
+    });
+
+    const result = await service.updateStatusForUser(
+      'user-1',
+      'order-1',
+      'customer_confirmed',
+    );
+
+    expect(result.status).toBe('customer_confirmed');
+    expect(ordersStorage.get('order-1')?.status).toBe('customer_confirmed');
+  });
+
+  it('rejects user transition when order is not owned by user', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'delivered',
+    });
+
+    await expect(
+      service.updateStatusForUser('user-2', 'order-1', 'customer_confirmed'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
