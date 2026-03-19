@@ -80,8 +80,7 @@ export class BusinessOrderController {
     schema: {
       example: {
         statusCode: 400,
-        message:
-          'Invalid status transition from customer_declined to delivered',
+        message: 'Invalid status transition from payment_pending to delivered',
         error: 'Bad Request',
       },
     },

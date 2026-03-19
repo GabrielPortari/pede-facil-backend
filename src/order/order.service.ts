@@ -28,7 +28,7 @@ const BUSINESS_STATUS_TRANSITIONS: Record<
   OrderStatus[]
 > = {
   paid_awaiting_delivery: ['payment_pending'],
-  delivered: ['paid_awaiting_delivery'],
+  delivered: ['paid_awaiting_delivery', 'customer_declined'],
   business_cancelled: [
     'payment_pending',
     'paid_awaiting_delivery',

@@ -390,6 +390,7 @@ Transicoes permitidas para business:
 
 - `payment_pending` -> `paid_awaiting_delivery`
 - `paid_awaiting_delivery` -> `delivered`
+- `customer_declined` -> `delivered`
 - `payment_pending` -> `business_cancelled`
 - `paid_awaiting_delivery` -> `business_cancelled`
 - `customer_declined` -> `business_cancelled`

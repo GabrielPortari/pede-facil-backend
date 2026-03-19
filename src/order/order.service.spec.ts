@@ -389,6 +389,23 @@ describe('OrderService', () => {
     expect(ordersStorage.get('order-1')?.status).toBe('business_cancelled');
   });
 
+  it('allows business to deliver again after customer_declined', async () => {
+    ordersStorage.set('order-1', {
+      userId: 'user-1',
+      businessId: 'biz-1',
+      status: 'customer_declined',
+    });
+
+    const result = await service.updateStatusForBusiness(
+      'biz-1',
+      'order-1',
+      'delivered',
+    );
+
+    expect(result.status).toBe('delivered');
+    expect(ordersStorage.get('order-1')?.status).toBe('delivered');
+  });
+
   it('rejects user transition when order is not owned by user', async () => {
     ordersStorage.set('order-1', {
       userId: 'user-1',
